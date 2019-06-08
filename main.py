@@ -5,6 +5,7 @@ from lunarlockout import LunarLockoutState, Direction, lockout_goal_state
 from solution import *
 from pygame.locals import *
 from sys import exit
+from helpers import *
 
 pygame.init()
 
@@ -31,7 +32,7 @@ for i in range(len(robots_images)):
 for i in range(len(rovers_load)):
     rovers_load[i] = pygame.image.load('images/' + rovers_images[i]).convert()
 # robot = pygame.image.load('images/robot.png').convert()
-state = LunarLockoutState("START", 0, None, 5, ((0, 0), (1, 0), (2, 2), (4, 2), (0, 4), (4, 4)), ((0, 1),))
+state = LunarLockoutState("START", 0, None, 5, ((0, 0), (1, 0), (2, 2), (4, 2), (0, 4), (4, 4)), ((0, 2),))
 all_chess = state.xanadus + state.robots
 
 # 画出棋盘
@@ -79,8 +80,11 @@ def draw_background(surf):
     #     pygame.draw.circle(surf, BLACK, cc, 5)
 
 
-def draw_red_point(surf, mouse_x, mouse_y):
-    pygame.draw.circle(surf, BLACK, (mouse_x, mouse_y), 30, 5)
+def draw_red_point(surf, lst_red_points):
+    for item in lst_red_points:
+        x = int(GRID_WIDTH + (item[0] + 1/2) * Block)
+        y = int(GRID_WIDTH + (item[1] + 1/2) * Block)
+        pygame.draw.circle(surf, BLACK, (x, y), 30, 5)
 
 
 def screen_position(pos: tuple):
@@ -127,9 +131,17 @@ def draw_all_rovers(state):
 
 
 def click_chess(mouse_x, mouse_y):
-    for item in all_chess:
-        if GRID_WIDTH + Block * (item[0] + 1) > mouse_x > GRID_WIDTH + Block * item[0] and GRID_WIDTH + Block * (item[1] + 1) > mouse_y > GRID_WIDTH + Block * item[1]:
-            draw_red_point(screen, mouse_x, mouse_y)
+    if mouse_x and mouse_y:
+        for item in all_chess:
+            if GRID_WIDTH + Block * (item[0] + 1) > mouse_x > GRID_WIDTH + Block * item[0] and GRID_WIDTH + Block * (item[1] + 1) > mouse_y > GRID_WIDTH + Block * item[1]:
+                lst_red_points = all_pos_can_move(item, state)
+                draw_red_point(screen, lst_red_points)
+
+def draw_all(state, mouse_x, mouse_y):
+    draw_background(screen)
+    draw_all_robots(state)
+    draw_all_rovers(state)
+    click_chess(mouse_x, mouse_y)
 
 running = True
 while running:
@@ -143,10 +155,8 @@ while running:
             running = False
 
     # 画出棋盘
-    draw_background(screen)
-    draw_all_robots(state)
-    draw_all_rovers(state)
     # draw_red_point(screen)
+    draw_all(state, None, None)
     # 刷新屏幕
     pygame.display.flip()
 
@@ -157,7 +167,7 @@ while running:
                 exit()
             if event.type == MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
-                click_chess(mouse_x, mouse_y)
+                draw_all(state, mouse_x, mouse_y)
                 # screen.fill((mouse_x, mouse_y, 0))
                 # screen.blit(text, (40, 100))
-                pygame.display.update()
+                pygame.display.flip()
